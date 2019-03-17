@@ -8,6 +8,8 @@
  */
 package org.antframework.configcenter.web.controller;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.antframework.common.util.facade.AbstractResult;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.Status;
@@ -31,7 +33,7 @@ public class ConfigController {
     private MetaProperties metaProperties;
 
     /**
-     * 查找应用在特定环境中的配置
+     * 查找应用在指定环境中的配置
      *
      * @param mainAppId    主体应用id（必须）
      * @param queriedAppId 被查询配置的应用id（必须）
@@ -64,16 +66,10 @@ public class ConfigController {
     /**
      * 元数据result
      */
+    @Getter
+    @Setter
     public static class MetaResult extends AbstractResult {
         // 配置中心使用的zookeeper地址
         private String[] zkUrls;
-
-        public String[] getZkUrls() {
-            return zkUrls;
-        }
-
-        public void setZkUrls(String[] zkUrls) {
-            this.zkUrls = zkUrls;
-        }
     }
 }

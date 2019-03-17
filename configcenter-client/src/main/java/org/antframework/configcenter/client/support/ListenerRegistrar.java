@@ -8,6 +8,7 @@
  */
 package org.antframework.configcenter.client.support;
 
+import org.antframework.common.util.tostring.ToString;
 import org.antframework.configcenter.client.ConfigListener;
 import org.antframework.configcenter.client.core.ChangedProperty;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class ListenerRegistrar {
     private static final Logger logger = LoggerFactory.getLogger(ListenerRegistrar.class);
 
     // 监听器
-    private List<ConfigListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<ConfigListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * 注册监听器
@@ -46,6 +47,7 @@ public class ListenerRegistrar {
         if (changedProperties == null || changedProperties.size() <= 0) {
             return;
         }
+        logger.info("检测到配置中心的配置已变更：{}", ToString.toString(changedProperties));
         for (ConfigListener listener : listeners) {
             try {
                 listener.onChange(changedProperties);

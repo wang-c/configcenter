@@ -11,7 +11,6 @@ package org.antframework.configcenter.web.controller.manage;
 import org.antframework.common.util.facade.AbstractQueryResult;
 import org.antframework.common.util.facade.EmptyResult;
 import org.antframework.common.util.facade.FacadeUtils;
-import org.antframework.configcenter.biz.util.RefreshUtils;
 import org.antframework.configcenter.facade.api.AppService;
 import org.antframework.configcenter.facade.info.AppInfo;
 import org.antframework.configcenter.facade.order.*;
@@ -19,12 +18,11 @@ import org.antframework.configcenter.facade.result.FindAppResult;
 import org.antframework.configcenter.facade.result.FindAppTreeResult;
 import org.antframework.configcenter.facade.result.FindInheritedAppsResult;
 import org.antframework.configcenter.facade.result.QueryAppsResult;
+import org.antframework.configcenter.web.common.KeyPrivileges;
+import org.antframework.configcenter.web.common.ManagerApps;
 import org.antframework.manager.facade.enums.ManagerType;
 import org.antframework.manager.facade.info.ManagerInfo;
-import org.antframework.manager.facade.info.RelationInfo;
-import org.antframework.manager.facade.result.QueryManagerRelationsResult;
-import org.antframework.manager.web.common.ManagerAssert;
-import org.antframework.manager.web.common.Managers;
+import org.antframework.manager.web.Managers;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/manage/app")
-public class AppManageController {
+public class AppController {
     @Autowired
     private AppService appService;
 
@@ -48,16 +46,13 @@ public class AppManageController {
      */
     @RequestMapping("/addOrModifyApp")
     public EmptyResult addOrModifyApp(String appId, String appName, String parent) {
-        ManagerAssert.admin();
+        Managers.admin();
         AddOrModifyAppOrder order = new AddOrModifyAppOrder();
         order.setAppId(appId);
         order.setAppName(appName);
         order.setParent(parent);
 
-        EmptyResult result = appService.addOrModifyApp(order);
-        // 刷新客户端
-        RefreshUtils.refreshClients(appId, null);
-        return result;
+        return appService.addOrModifyApp(order);
     }
 
     /**
@@ -67,13 +62,18 @@ public class AppManageController {
      */
     @RequestMapping("/deleteApp")
     public EmptyResult deleteApp(String appId) {
-        ManagerAssert.admin();
+        Managers.admin();
         // 删除管理员和应用的关联
-        Managers.deleteAllRelationsByTarget(appId);
+        ManagerApps.deletesByApp(appId);
         // 删除应用
         DeleteAppOrder order = new DeleteAppOrder();
         order.setAppId(appId);
-        return appService.deleteApp(order);
+        EmptyResult result = appService.deleteApp(order);
+        if (result.isSuccess()) {
+            // 删除应用的所有配置key的权限
+            KeyPrivileges.deletePrivileges(appId, null);
+        }
+        return result;
     }
 
     /**
@@ -83,6 +83,7 @@ public class AppManageController {
      */
     @RequestMapping("/findApp")
     public FindAppResult findApp(String appId) {
+        Managers.currentManager();
         FindAppOrder order = new FindAppOrder();
         order.setAppId(appId);
 
@@ -96,7 +97,7 @@ public class AppManageController {
      */
     @RequestMapping("/findInheritedApps")
     public FindInheritedAppsResult findInheritedApps(String appId) {
-        ManagerAssert.adminOrHaveRelation(appId);
+        ManagerApps.adminOrHaveApp(appId);
         FindInheritedAppsOrder order = new FindInheritedAppsOrder();
         order.setAppId(appId);
 
@@ -106,11 +107,11 @@ public class AppManageController {
     /**
      * 查找应用树
      *
-     * @param appId 应用id（必须）
+     * @param appId 根节点应用id（不填表示查找所有应用）
      */
     @RequestMapping("/findAppTree")
     private FindAppTreeResult findAppTree(String appId) {
-        ManagerAssert.adminOrHaveRelation(appId);
+        ManagerApps.adminOrHaveApp(appId);
         FindAppTreeOrder order = new FindAppTreeOrder();
         order.setAppId(appId);
 
@@ -127,7 +128,7 @@ public class AppManageController {
      */
     @RequestMapping("/queryApps")
     public QueryAppsResult queryApps(int pageNo, int pageSize, String appId, String parent) {
-        ManagerAssert.admin();
+        Managers.admin();
         QueryAppsOrder order = new QueryAppsOrder();
         order.setPageNo(pageNo);
         order.setPageSize(pageSize);
@@ -146,11 +147,11 @@ public class AppManageController {
      */
     @RequestMapping("/queryManagedApps")
     public QueryManagedAppsResult queryManagedApps(int pageNo, int pageSize, String appId) {
-        ManagerInfo manager = ManagerAssert.currentManager();
+        ManagerInfo manager = Managers.currentManager();
         if (manager.getType() == ManagerType.ADMIN) {
             return forAdmin(pageNo, pageSize, appId);
         } else {
-            return forNormal(Managers.queryManagerRelations(pageNo, pageSize, appId));
+            return forNormal(ManagerApps.queryManagedApps(pageNo, pageSize, appId));
         }
     }
 
@@ -165,24 +166,18 @@ public class AppManageController {
     }
 
     // 为普通管理员查询他管理的应用
-    private QueryManagedAppsResult forNormal(QueryManagerRelationsResult relationsResult) {
+    private QueryManagedAppsResult forNormal(AbstractQueryResult<String> appIdsResult) {
         QueryManagedAppsResult result = new QueryManagedAppsResult();
-        BeanUtils.copyProperties(relationsResult, result, "infos");
-        // 根据关系查找应用
-        for (RelationInfo relation : relationsResult.getInfos()) {
-            AppInfo app = getApp(relation.getTargetId());
-            if (app != null) {
-                result.addInfo(app);
+        BeanUtils.copyProperties(appIdsResult, result, "infos");
+        // 查找应用
+        for (String appId : appIdsResult.getInfos()) {
+            FindAppResult findAppResult = findApp(appId);
+            FacadeUtils.assertSuccess(findAppResult);
+            if (findAppResult.getApp() != null) {
+                result.addInfo(findAppResult.getApp());
             }
         }
         return result;
-    }
-
-    // 获取应用
-    private AppInfo getApp(String appId) {
-        FindAppResult result = findApp(appId);
-        FacadeUtils.assertSuccess(result);
-        return result.getApp();
     }
 
     /**

@@ -16,14 +16,14 @@ import org.antframework.configcenter.dal.entity.PropertyKey;
 import org.antframework.configcenter.facade.api.PropertyValueService;
 import org.antframework.configcenter.facade.info.ProfileInfo;
 import org.antframework.configcenter.facade.order.DeletePropertyKeyOrder;
-import org.antframework.configcenter.facade.order.SetPropertyValuesOrder;
+import org.antframework.configcenter.facade.order.DeletePropertyValueOrder;
 import org.bekit.service.annotation.service.Service;
 import org.bekit.service.annotation.service.ServiceExecute;
 import org.bekit.service.engine.ServiceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * 删除属性key服务
+ * 删除配置key服务
  */
 @Service(enableTx = true)
 public class DeletePropertyKeyService {
@@ -48,18 +48,14 @@ public class DeletePropertyKeyService {
         propertyKeyDao.delete(propertyKey);
     }
 
-    // 删除属性value
+    // 删除配置value
     private void deletePropertyValue(String appId, String key, String profileId) {
-        SetPropertyValuesOrder.KeyValue keyValue = new SetPropertyValuesOrder.KeyValue();
-        keyValue.setKey(key);
-        keyValue.setValue(null);
-
-        SetPropertyValuesOrder order = new SetPropertyValuesOrder();
+        DeletePropertyValueOrder order = new DeletePropertyValueOrder();
         order.setAppId(appId);
+        order.setKey(key);
         order.setProfileId(profileId);
-        order.addKeyValue(keyValue);
 
-        EmptyResult result = propertyValueService.setPropertyValues(order);
+        EmptyResult result = propertyValueService.deletePropertyValue(order);
         FacadeUtils.assertSuccess(result);
     }
 }

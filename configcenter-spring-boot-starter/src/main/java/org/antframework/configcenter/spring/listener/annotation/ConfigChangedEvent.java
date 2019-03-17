@@ -15,13 +15,13 @@ import java.util.List;
 /**
  * 配置被修改事件
  */
-public class ConfigChangedEvent {
+public final class ConfigChangedEvent {
     // 应用id
-    private String appId;
-    // 被修改的属性名前缀
-    private String prefix;
-    // 被修改的属性
-    private List<ChangedProperty> changedProperties;
+    private final String appId;
+    // 被修改的配置key前缀
+    private final String prefix;
+    // 被修改的配置
+    private final List<ChangedProperty> changedProperties;
 
     public ConfigChangedEvent(String appId, String prefix, List<ChangedProperty> changedProperties) {
         this.appId = appId;

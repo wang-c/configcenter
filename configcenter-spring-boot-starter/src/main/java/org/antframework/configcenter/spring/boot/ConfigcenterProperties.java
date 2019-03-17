@@ -22,13 +22,13 @@ import javax.validation.constraints.Min;
 @Validated
 public class ConfigcenterProperties {
     /**
-     * 应用id的占位符匹配模式
+     * 应用id（默认为spring.application.name对应的配置）
      */
     public static final String APP_ID_PATTERN = "${configcenter.app-id:${spring.application.name}}";
     /**
-     * 是否关闭监听配置是否被修改（默认为开启）
+     * 是否开启监听配置变更事件（默认为开启）
      */
-    public static final String LISTEN_DISABLE_PROPERTY_NAME = "configcenter.listen.disable";
+    public static final String LISTEN_CONFIGS_ENABLE_KEY = "configcenter.listen-configs.enable";
     /**
      * 实例
      */
@@ -40,10 +40,10 @@ public class ConfigcenterProperties {
     @NotBlank
     private String serverUrl;
     /**
-     * 选填：缓存目录（默认为：/var/apps/config）
+     * 选填：缓存目录（默认为：/var/apps/configcenter）
      */
     @NotBlank
-    private String cacheDir = "/var/apps/config";
+    private String cacheDirPath = "/var/apps/configcenter";
     /**
      * 选填：配置刷新周期（单位：秒。默认为5分钟刷新一次）
      */
@@ -62,12 +62,12 @@ public class ConfigcenterProperties {
         this.serverUrl = serverUrl;
     }
 
-    public String getCacheDir() {
-        return cacheDir;
+    public String getCacheDirPath() {
+        return cacheDirPath;
     }
 
-    public void setCacheDir(String cacheDir) {
-        this.cacheDir = cacheDir;
+    public void setCacheDirPath(String cacheDirPath) {
+        this.cacheDirPath = cacheDirPath;
     }
 
     public int getRefreshPeriod() {

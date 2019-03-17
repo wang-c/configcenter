@@ -23,14 +23,14 @@ import java.util.Map;
 public class ConfigRefresher {
     private static final Logger logger = LoggerFactory.getLogger(ConfigRefresher.class);
 
-    // 配置属性
-    private ConfigurableConfigProperties properties;
+    // 配置项集合
+    private final ConfigurableConfigProperties properties;
     // 监听器注册器
-    private ListenerRegistrar listenerRegistrar;
+    private final ListenerRegistrar listenerRegistrar;
     // 配置请求器
-    private ServerRequester.ConfigRequester configRequester;
+    private final ServerRequester.ConfigRequester configRequester;
     // 缓存文件
-    private MapFile cacheFile;
+    private final MapFile cacheFile;
 
     public ConfigRefresher(ConfigurableConfigProperties properties,
                            ListenerRegistrar listenerRegistrar,
@@ -64,6 +64,7 @@ public class ConfigRefresher {
         }
         if (fromServer && cacheFile != null) {
             cacheFile.replace(newProperties);
+            logger.debug("配置中心的配置已缓存到：{}", cacheFile.getFilePath());
         }
         properties.replaceProperties(newProperties);
     }
@@ -75,6 +76,7 @@ public class ConfigRefresher {
         Map<String, String> newProperties = configRequester.findConfig();
         if (cacheFile != null) {
             cacheFile.replace(newProperties);
+            logger.debug("配置中心的配置已缓存到：{}", cacheFile.getFilePath());
         }
         List<ChangedProperty> changedProperties = properties.replaceProperties(newProperties);
         listenerRegistrar.onChange(changedProperties);

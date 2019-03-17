@@ -24,7 +24,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * 添加或修改属性key服务
+ * 添加或修改配置key服务
  */
 @Service(enableTx = true)
 public class AddOrModifyPropertyKeyService {
@@ -39,7 +39,7 @@ public class AddOrModifyPropertyKeyService {
 
         App app = appDao.findLockByAppId(order.getAppId());
         if (app == null) {
-            throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("不存在应用[%s]", order.getAppId()));
+            throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("应用[%s]不存在", order.getAppId()));
         }
         PropertyKey propertyKey = propertyKeyDao.findLockByAppIdAndKey(order.getAppId(), order.getKey());
         if (propertyKey == null) {

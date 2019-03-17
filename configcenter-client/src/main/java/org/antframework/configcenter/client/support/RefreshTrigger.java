@@ -38,38 +38,33 @@ public class RefreshTrigger {
     private static final String ZK_CONFIG_NAMESPACE = "configcenter/config";
 
     // 监听器缓存
-    private Cache<String, NodeCache> listenersCache = new Cache<>(new Cache.Supplier<String, NodeCache>() {
-        @Override
-        public NodeCache get(String key) {
-            return listenApp(key);
-        }
-    });
+    private final Cache<String, NodeCache> listenersCache = new Cache<>(this::listenApp);
     // 环境id
-    private String profileId;
+    private final String profileId;
     // 元数据请求器
-    private ServerRequester.MetaRequester metaRequester;
+    private final ServerRequester.MetaRequester metaRequester;
     // 刷新器
-    private Refresher refresher;
+    private final Refresher refresher;
     // 缓存文件
-    private MapFile cacheFile;
+    private final MapFile cacheFile;
     // zookeeper操作类
     private ZkTemplate zkTemplate;
 
-    public RefreshTrigger(String profileId, ServerRequester serverRequester, Refresher refresher, String cacheDir) {
+    public RefreshTrigger(String profileId, ServerRequester serverRequester, Refresher refresher, String cacheDirPath) {
         this.profileId = profileId;
         metaRequester = serverRequester.createMetaRequester();
         this.refresher = refresher;
-        cacheFile = buildCacheFile(cacheDir);
+        cacheFile = buildCacheFile(cacheDirPath);
         zkTemplate = buildInitZkTemplate();
     }
 
     // 构建缓存文件
-    private MapFile buildCacheFile(String cacheDir) {
-        if (cacheDir == null) {
+    private MapFile buildCacheFile(String cacheDirPath) {
+        if (cacheDirPath == null) {
             return null;
         }
-        String cacheFile = cacheDir + File.separator + META_CACHE_FILE_NAME;
-        return new MapFile(cacheFile);
+        String cacheFilePath = cacheDirPath + File.separator + META_CACHE_FILE_NAME;
+        return new MapFile(cacheFilePath);
     }
 
     // 构建初始的ZkTemplate
@@ -116,14 +111,11 @@ public class RefreshTrigger {
 
     // 监听应用
     private NodeCache listenApp(String appId) {
-        ZkTemplate.NodeListener listener = new ZkTemplate.NodeListener() {
-            @Override
-            public void nodeChanged() throws Exception {
-                try {
-                    refresher.refresh(appId);
-                } catch (Throwable e) {
-                    logger.error("触发刷新配置出错：", e);
-                }
+        ZkTemplate.NodeListener listener = () -> {
+            try {
+                refresher.refresh(appId);
+            } catch (Throwable e) {
+                logger.error("触发刷新配置出错：", e);
             }
         };
         return zkTemplate.listenNode(ZkTemplate.buildPath(profileId, appId), false, listener);

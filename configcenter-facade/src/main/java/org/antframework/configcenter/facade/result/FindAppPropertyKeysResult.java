@@ -8,6 +8,7 @@
  */
 package org.antframework.configcenter.facade.result;
 
+import lombok.Getter;
 import org.antframework.common.util.facade.AbstractResult;
 import org.antframework.configcenter.facade.info.PropertyKeyInfo;
 
@@ -15,15 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 查找应用的属性key-result
+ * 查找应用的配置key-result
  */
+@Getter
 public class FindAppPropertyKeysResult extends AbstractResult {
-    // 应用的属性key
+    // 应用的配置key
     private List<PropertyKeyInfo> propertyKeys = new ArrayList<>();
-
-    public List<PropertyKeyInfo> getPropertyKeys() {
-        return propertyKeys;
-    }
 
     public void addPropertyKey(PropertyKeyInfo propertyKey) {
         propertyKeys.add(propertyKey);

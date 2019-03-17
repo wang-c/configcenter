@@ -8,63 +8,35 @@
  */
 package org.antframework.configcenter.dal.entity;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.antframework.boot.jpa.AbstractEntity;
 import org.antframework.configcenter.facade.vo.Scope;
 
 import javax.persistence.*;
 
 /**
- * 属性key
+ * 配置key
  */
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"appId", "key"}))
+@Table(uniqueConstraints = @UniqueConstraint(name = "uk_appId_key", columnNames = {"appId", "key"}))
+@Getter
+@Setter
 public class PropertyKey extends AbstractEntity {
     // 应用id
     @Column(length = 64)
     private String appId;
 
-    // 属性key
+    // key
     @Column(name = "`key`", length = 128)
     private String key;
 
     // 作用域
-    @Column
+    @Column(length = 64)
     @Enumerated(EnumType.STRING)
     private Scope scope;
 
     // 备注
     @Column
     private String memo;
-
-    public String getAppId() {
-        return appId;
-    }
-
-    public void setAppId(String appId) {
-        this.appId = appId;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public Scope getScope() {
-        return scope;
-    }
-
-    public void setScope(Scope scope) {
-        this.scope = scope;
-    }
-
-    public String getMemo() {
-        return memo;
-    }
-
-    public void setMemo(String memo) {
-        this.memo = memo;
-    }
 }

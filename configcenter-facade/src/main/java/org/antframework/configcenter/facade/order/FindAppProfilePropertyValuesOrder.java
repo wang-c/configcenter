@@ -8,12 +8,19 @@
  */
 package org.antframework.configcenter.facade.order;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.antframework.common.util.facade.AbstractOrder;
+import org.antframework.configcenter.facade.vo.Scope;
 import org.hibernate.validator.constraints.NotBlank;
 
+import javax.validation.constraints.NotNull;
+
 /**
- * 查找应用在指定环境的所有属性value-order
+ * 查找应用在指定环境的配置value-order
  */
+@Getter
+@Setter
 public class FindAppProfilePropertyValuesOrder extends AbstractOrder {
     // 应用id
     @NotBlank
@@ -21,20 +28,7 @@ public class FindAppProfilePropertyValuesOrder extends AbstractOrder {
     // 环境id
     @NotBlank
     private String profileId;
-
-    public String getAppId() {
-        return appId;
-    }
-
-    public void setAppId(String appId) {
-        this.appId = appId;
-    }
-
-    public String getProfileId() {
-        return profileId;
-    }
-
-    public void setProfileId(String profileId) {
-        this.profileId = profileId;
-    }
+    // 最小作用域
+    @NotNull
+    private Scope minScope;
 }

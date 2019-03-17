@@ -12,10 +12,7 @@ import org.antframework.common.util.facade.EmptyResult;
 import org.antframework.common.util.facade.Status;
 import org.antframework.configcenter.facade.api.AppService;
 import org.antframework.configcenter.facade.order.*;
-import org.antframework.configcenter.facade.result.FindAppResult;
-import org.antframework.configcenter.facade.result.FindAppTreeResult;
-import org.antframework.configcenter.facade.result.FindInheritedAppsResult;
-import org.antframework.configcenter.facade.result.QueryAppsResult;
+import org.antframework.configcenter.facade.result.*;
 import org.antframework.configcenter.test.AbstractTest;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,16 +36,23 @@ public class AppServiceTest extends AbstractTest {
         checkResult(result, Status.SUCCESS);
 
         order = new AddOrModifyAppOrder();
-        order.setAppId("scbfund");
-        order.setAppName("升财宝");
+        order.setAppId("core-domain");
+        order.setAppName("核心领域");
         order.setParent("common");
         result = appService.addOrModifyApp(order);
         checkResult(result, Status.SUCCESS);
 
         order = new AddOrModifyAppOrder();
-        order.setAppId("investment");
-        order.setAppName("理财平台");
-        order.setParent("common");
+        order.setAppId("account");
+        order.setAppName("账务系统");
+        order.setParent("core-domain");
+        result = appService.addOrModifyApp(order);
+        checkResult(result, Status.SUCCESS);
+
+        order = new AddOrModifyAppOrder();
+        order.setAppId("customer");
+        order.setAppName("会员系统");
+        order.setParent("core-domain");
         result = appService.addOrModifyApp(order);
         checkResult(result, Status.SUCCESS);
     }
@@ -56,16 +60,29 @@ public class AppServiceTest extends AbstractTest {
     @Test
     public void testDeleteApp() {
         DeleteAppOrder order = new DeleteAppOrder();
-        order.setAppId("common");
-
+        order.setAppId("core-domain");
         EmptyResult result = appService.deleteApp(order);
+        checkResult(result, Status.FAIL);
+
+        order = new DeleteAppOrder();
+        order.setAppId("customer");
+        result = appService.deleteApp(order);
+        checkResult(result, Status.SUCCESS);
+    }
+
+    @Test
+    public void testProduceReleaseVersion() {
+        ProduceReleaseVersionOrder order = new ProduceReleaseVersionOrder();
+        order.setAppId("customer");
+
+        ProduceReleaseVersionResult result = appService.produceReleaseVersion(order);
         checkResult(result, Status.SUCCESS);
     }
 
     @Test
     public void testFindApp() {
         FindAppOrder order = new FindAppOrder();
-        order.setAppId("scbfund");
+        order.setAppId("customer");
 
         FindAppResult result = appService.findApp(order);
         checkResult(result, Status.SUCCESS);
@@ -74,7 +91,7 @@ public class AppServiceTest extends AbstractTest {
     @Test
     public void testFindInheritedApps() {
         FindInheritedAppsOrder order = new FindInheritedAppsOrder();
-        order.setAppId("scbfund");
+        order.setAppId("customer");
 
         FindInheritedAppsResult result = appService.findInheritedApps(order);
         checkResult(result, Status.SUCCESS);

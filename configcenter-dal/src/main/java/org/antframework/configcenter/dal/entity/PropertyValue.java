@@ -8,21 +8,28 @@
  */
 package org.antframework.configcenter.dal.entity;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.antframework.boot.jpa.AbstractEntity;
+import org.antframework.common.util.tostring.format.Mask;
+import org.antframework.configcenter.facade.vo.Scope;
 
 import javax.persistence.*;
 
 /**
- * 属性value
+ * 配置value
  */
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"appId", "key", "profileId"}), indexes = @Index(columnList = "appId,profileId"))
+@Table(uniqueConstraints = @UniqueConstraint(name = "uk_appId_key_profileId", columnNames = {"appId", "key", "profileId"}),
+        indexes = @Index(name = "idx_appId_profileId", columnList = "appId,profileId"))
+@Getter
+@Setter
 public class PropertyValue extends AbstractEntity {
     // 应用id
     @Column(length = 64)
     private String appId;
 
-    // 属性key
+    // key
     @Column(name = "`key`", length = 128)
     private String key;
 
@@ -30,39 +37,14 @@ public class PropertyValue extends AbstractEntity {
     @Column(length = 64)
     private String profileId;
 
-    // 属性value
+    // value
     @Column
+    @Lob
+    @Mask(allMask = true)
     private String value;
 
-    public String getAppId() {
-        return appId;
-    }
-
-    public void setAppId(String appId) {
-        this.appId = appId;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public String getProfileId() {
-        return profileId;
-    }
-
-    public void setProfileId(String profileId) {
-        this.profileId = profileId;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
+    // 作用域
+    @Column(length = 64)
+    @Enumerated(EnumType.STRING)
+    private Scope scope;
 }

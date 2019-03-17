@@ -22,32 +22,32 @@ import java.io.File;
  * 配置
  */
 public class Config {
-    // 配置属性
-    private ConfigurableConfigProperties properties = new DefaultConfigProperties();
+    // 配置项集合
+    private final ConfigurableConfigProperties properties = new DefaultConfigProperties();
     // 监听器注册器
-    private ListenerRegistrar listenerRegistrar = new ListenerRegistrar();
+    private final ListenerRegistrar listenerRegistrar = new ListenerRegistrar();
     // 应用id
-    private String appId;
+    private final String appId;
     // 配置刷新器
-    private ConfigRefresher configRefresher;
+    private final ConfigRefresher configRefresher;
 
-    public Config(String appId, ServerRequester serverRequester, String cacheDir) {
+    public Config(String appId, ServerRequester serverRequester, String cacheDirPath) {
         this.appId = appId;
-        configRefresher = new ConfigRefresher(properties, listenerRegistrar, serverRequester.createConfigRequester(appId), buildCacheFile(cacheDir));
+        configRefresher = new ConfigRefresher(properties, listenerRegistrar, serverRequester.createConfigRequester(appId), buildCacheFile(cacheDirPath));
         configRefresher.initConfig();
     }
 
     // 构建缓存文件
-    private MapFile buildCacheFile(String cacheDir) {
-        if (cacheDir == null) {
+    private MapFile buildCacheFile(String cacheDirPath) {
+        if (cacheDirPath == null) {
             return null;
         }
-        String cacheFile = cacheDir + File.separator + String.format("%s.properties", appId);
-        return new MapFile(cacheFile);
+        String cacheFilePath = cacheDirPath + File.separator + String.format("%s.properties", appId);
+        return new MapFile(cacheFilePath);
     }
 
     /**
-     * 获取配置属性
+     * 获取配置项集合
      */
     public ConfigProperties getProperties() {
         return properties;

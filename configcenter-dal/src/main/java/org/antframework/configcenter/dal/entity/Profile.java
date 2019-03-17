@@ -8,37 +8,32 @@
  */
 package org.antframework.configcenter.dal.entity;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.antframework.boot.jpa.AbstractEntity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 /**
  * 环境
  */
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(name = "uk_profileId", columnNames = "profileId"))
+@Getter
+@Setter
 public class Profile extends AbstractEntity {
     // 环境id
-    @Column(unique = true, length = 64)
+    @Column(length = 64)
     private String profileId;
 
     // 环境名
     @Column
     private String profileName;
 
-    public String getProfileId() {
-        return profileId;
-    }
-
-    public void setProfileId(String profileId) {
-        this.profileId = profileId;
-    }
-
-    public String getProfileName() {
-        return profileName;
-    }
-
-    public void setProfileName(String profileName) {
-        this.profileName = profileName;
-    }
+    // 父环境id（null表示无父环境）
+    @Column(length = 64)
+    private String parent;
 }
