@@ -8,11 +8,12 @@
  */
 package org.antframework.configcenter.biz.service;
 
+import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.BizException;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.FacadeUtils;
 import org.antframework.common.util.facade.Status;
-import org.antframework.configcenter.biz.util.ProfileUtils;
+import org.antframework.configcenter.biz.util.Profiles;
 import org.antframework.configcenter.dal.dao.ProfileDao;
 import org.antframework.configcenter.dal.entity.Profile;
 import org.antframework.configcenter.facade.info.ProfileInfo;
@@ -22,7 +23,6 @@ import org.antframework.configcenter.facade.result.FindProfileTreeResult;
 import org.bekit.service.annotation.service.Service;
 import org.bekit.service.annotation.service.ServiceExecute;
 import org.bekit.service.engine.ServiceContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 
 import java.util.List;
@@ -31,12 +31,13 @@ import java.util.List;
  * 查找环境树服务
  */
 @Service
+@AllArgsConstructor
 public class FindProfileTreeService {
     // info转换器
     private static final Converter<Profile, ProfileInfo> INFO_CONVERTER = new FacadeUtils.DefaultConverter<>(ProfileInfo.class);
 
-    @Autowired
-    private ProfileDao profileDao;
+    // 环境dao
+    private final ProfileDao profileDao;
 
     @ServiceExecute
     public void execute(ServiceContext<FindProfileTreeOrder, FindProfileTreeResult> context) {
@@ -45,7 +46,7 @@ public class FindProfileTreeService {
 
         ProfileInfo profile = null;
         if (order.getProfileId() != null) {
-            profile = ProfileUtils.findProfile(order.getProfileId());
+            profile = Profiles.findProfile(order.getProfileId());
             if (profile == null) {
                 throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("环境[%s]不存在", order.getProfileId()));
             }

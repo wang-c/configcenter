@@ -8,26 +8,21 @@
  */
 package org.antframework.configcenter.biz.provider;
 
-import org.antframework.common.util.facade.EmptyOrder;
+import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.EmptyResult;
 import org.antframework.configcenter.facade.api.RefreshService;
 import org.antframework.configcenter.facade.order.RefreshClientsOrder;
 import org.bekit.service.ServiceEngine;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
  * 刷新服务提供者
  */
 @Service
+@AllArgsConstructor
 public class RefreshServiceProvider implements RefreshService {
-    @Autowired
-    private ServiceEngine serviceEngine;
-
-    @Override
-    public EmptyResult refreshZk(EmptyOrder order) {
-        return serviceEngine.execute("refreshZkService", order);
-    }
+    // 服务引擎
+    private final ServiceEngine serviceEngine;
 
     @Override
     public EmptyResult refreshClients(RefreshClientsOrder order) {

@@ -14,8 +14,8 @@ import org.antframework.common.util.facade.BizException;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.Status;
 import org.antframework.common.util.tostring.ToString;
-import org.antframework.configcenter.biz.util.AppUtils;
-import org.antframework.configcenter.biz.util.PropertyKeyUtils;
+import org.antframework.configcenter.biz.util.Apps;
+import org.antframework.configcenter.biz.util.PropertyKeys;
 import org.antframework.configcenter.facade.info.AppInfo;
 import org.antframework.configcenter.facade.info.PropertyKeyInfo;
 import org.antframework.configcenter.facade.vo.Scope;
@@ -106,12 +106,12 @@ public final class KeyPrivileges {
     public static List<AppPrivilege> findInheritedPrivileges(String appId) {
         List<AppPrivilege> appPrivileges = new ArrayList<>();
 
-        for (AppInfo app : AppUtils.findInheritedApps(appId)) {
+        for (AppInfo app : Apps.findInheritedApps(appId)) {
             Map<String, Privilege> keyPrivileges = new HashMap<>();
             for (RelationInfo relation : Relations.findAllSourceRelations(RELATION_TYPE, app.getAppId())) {
                 keyPrivileges.put(relation.getTarget(), Privilege.valueOf(relation.getValue()));
             }
-            for (PropertyKeyInfo propertyKey : PropertyKeyUtils.findAppPropertyKeys(app.getAppId(), Scope.PRIVATE)) {
+            for (PropertyKeyInfo propertyKey : PropertyKeys.findAppPropertyKeys(app.getAppId(), Scope.PRIVATE)) {
                 keyPrivileges.putIfAbsent(propertyKey.getKey(), Privilege.READ_WRITE);
             }
 

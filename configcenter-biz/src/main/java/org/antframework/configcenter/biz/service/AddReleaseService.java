@@ -8,13 +8,14 @@
  */
 package org.antframework.configcenter.biz.service;
 
+import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.BizException;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.FacadeUtils;
 import org.antframework.common.util.facade.Status;
-import org.antframework.configcenter.biz.util.AppUtils;
-import org.antframework.configcenter.biz.util.PropertyValueUtils;
-import org.antframework.configcenter.biz.util.RefreshUtils;
+import org.antframework.configcenter.biz.util.Apps;
+import org.antframework.configcenter.biz.util.PropertyValues;
+import org.antframework.configcenter.biz.util.Refreshes;
 import org.antframework.configcenter.dal.dao.AppDao;
 import org.antframework.configcenter.dal.dao.ProfileDao;
 import org.antframework.configcenter.dal.dao.ReleaseDao;
@@ -33,7 +34,6 @@ import org.bekit.service.annotation.service.ServiceBefore;
 import org.bekit.service.annotation.service.ServiceExecute;
 import org.bekit.service.engine.ServiceContext;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 
 import java.util.ArrayList;
@@ -44,24 +44,25 @@ import java.util.List;
  * 新增发布服务
  */
 @Service(enableTx = true)
+@AllArgsConstructor
 public class AddReleaseService {
     // 配置版本在附件中的key
     private static final String VERSION_KEY = "version";
     // info转换器
     private static final Converter<Release, ReleaseInfo> INFO_CONVERTER = new FacadeUtils.DefaultConverter<>(ReleaseInfo.class);
 
-    @Autowired
-    private AppDao appDao;
-    @Autowired
-    private ProfileDao profileDao;
-    @Autowired
-    private ReleaseDao releaseDao;
+    // 应用dao
+    private final AppDao appDao;
+    // 环境dao
+    private final ProfileDao profileDao;
+    // 发布dao
+    private final ReleaseDao releaseDao;
 
     @ServiceBefore
     public void before(ServiceContext<AddReleaseOrder, AddReleaseResult> context) {
         AddReleaseOrder order = context.getOrder();
         // 生成版本
-        long version = AppUtils.produceReleaseVersion(order.getAppId());
+        long version = Apps.produceReleaseVersion(order.getAppId());
         context.setAttachmentAttr(VERSION_KEY, version);
     }
 
@@ -90,7 +91,7 @@ public class AddReleaseService {
     public void after(ServiceContext<AddReleaseOrder, AddReleaseResult> context) {
         AddReleaseOrder order = context.getOrder();
         // 刷新客户端
-        RefreshUtils.refreshClients(order.getAppId(), order.getProfileId());
+        Refreshes.refreshClients(order.getAppId(), order.getProfileId());
     }
 
     // 构建发布
@@ -108,7 +109,7 @@ public class AddReleaseService {
     private List<Property> buildProperties(AddReleaseOrder order) {
         List<Property> properties = new ArrayList<>();
 
-        List<PropertyValueInfo> propertyValues = PropertyValueUtils.findAppProfilePropertyValues(order.getAppId(), order.getProfileId(), Scope.PRIVATE);
+        List<PropertyValueInfo> propertyValues = PropertyValues.findAppProfilePropertyValues(order.getAppId(), order.getProfileId(), Scope.PRIVATE);
         for (PropertyValueInfo propertyValue : propertyValues) {
             properties.add(new Property(propertyValue.getKey(), propertyValue.getValue(), propertyValue.getScope()));
         }

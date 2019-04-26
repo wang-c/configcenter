@@ -8,14 +8,14 @@
  */
 package org.antframework.configcenter.web.controller.manage;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.antframework.common.util.facade.AbstractResult;
-import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.EmptyResult;
-import org.antframework.common.util.facade.Status;
-import org.antframework.configcenter.biz.util.PropertyValueUtils;
-import org.antframework.configcenter.biz.util.ReleaseUtils;
+import org.antframework.common.util.facade.FacadeUtils;
+import org.antframework.configcenter.biz.util.PropertyValues;
+import org.antframework.configcenter.biz.util.Releases;
 import org.antframework.configcenter.facade.api.PropertyValueService;
 import org.antframework.configcenter.facade.info.PropertyValueInfo;
 import org.antframework.configcenter.facade.order.AddOrModifyPropertyValueOrder;
@@ -32,7 +32,6 @@ import org.antframework.configcenter.web.common.Properties;
 import org.antframework.manager.facade.enums.ManagerType;
 import org.antframework.manager.facade.info.ManagerInfo;
 import org.antframework.manager.web.Managers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,11 +43,13 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/manage/propertyValue")
+@AllArgsConstructor
 public class PropertyValueController {
     // 掩码后的配置value
     private static final String MASKED_VALUE = "******";
-    @Autowired
-    private PropertyValueService propertyValueService;
+
+    // 配置value服务
+    private final PropertyValueService propertyValueService;
 
     /**
      * 新增或修改配置value
@@ -162,17 +163,13 @@ public class PropertyValueController {
     public ComparePropertyValuesWithReleaseResult comparePropertyValuesWithRelease(String appId, String profileId, Long releaseVersion) {
         ManagerApps.adminOrHaveApp(appId);
 
-        List<PropertyValueInfo> propertyValues = PropertyValueUtils.findAppProfilePropertyValues(appId, profileId, Scope.PRIVATE);
+        List<PropertyValueInfo> propertyValues = PropertyValues.findAppProfilePropertyValues(appId, profileId, Scope.PRIVATE);
         List<Property> left = propertyValues.stream().map(propertyValue -> new Property(propertyValue.getKey(), propertyValue.getValue(), propertyValue.getScope())).collect(Collectors.toList());
-        List<Property> right = ReleaseUtils.findRelease(appId, profileId, releaseVersion).getProperties();
+        List<Property> right = Releases.findRelease(appId, profileId, releaseVersion).getProperties();
         Properties.Difference difference = Properties.compare(left, right);
 
-        ComparePropertyValuesWithReleaseResult result = new ComparePropertyValuesWithReleaseResult();
-        result.setStatus(Status.SUCCESS);
-        result.setCode(CommonResultCode.SUCCESS.getCode());
-        result.setMessage(CommonResultCode.SUCCESS.getMessage());
+        ComparePropertyValuesWithReleaseResult result = FacadeUtils.buildSuccess(ComparePropertyValuesWithReleaseResult.class);
         result.setDifference(difference);
-
         return result;
     }
 

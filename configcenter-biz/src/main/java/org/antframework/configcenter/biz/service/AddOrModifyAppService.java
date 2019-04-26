@@ -8,11 +8,12 @@
  */
 package org.antframework.configcenter.biz.service;
 
+import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.BizException;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.EmptyResult;
 import org.antframework.common.util.facade.Status;
-import org.antframework.configcenter.biz.util.RefreshUtils;
+import org.antframework.configcenter.biz.util.Refreshes;
 import org.antframework.configcenter.dal.dao.AppDao;
 import org.antframework.configcenter.dal.entity.App;
 import org.antframework.configcenter.facade.order.AddOrModifyAppOrder;
@@ -22,7 +23,6 @@ import org.bekit.service.annotation.service.ServiceAfter;
 import org.bekit.service.annotation.service.ServiceExecute;
 import org.bekit.service.engine.ServiceContext;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Objects;
 
@@ -30,9 +30,10 @@ import java.util.Objects;
  * 添加或修改应用服务
  */
 @Service(enableTx = true)
+@AllArgsConstructor
 public class AddOrModifyAppService {
-    @Autowired
-    private AppDao appDao;
+    // 应用dao
+    private final AppDao appDao;
 
     @ServiceExecute
     public void execute(ServiceContext<AddOrModifyAppOrder, EmptyResult> context) {
@@ -68,9 +69,7 @@ public class AddOrModifyAppService {
     @ServiceAfter
     public void after(ServiceContext<AddOrModifyAppOrder, EmptyResult> context) {
         AddOrModifyAppOrder order = context.getOrder();
-        // 刷新zookeeper
-        RefreshUtils.refreshZk();
         // 刷新客户端
-        RefreshUtils.refreshClients(order.getAppId(), null);
+        Refreshes.refreshClients(order.getAppId(), null);
     }
 }

@@ -26,6 +26,7 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.ResolvableType;
+import org.springframework.util.Assert;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,7 +36,7 @@ import java.util.TimerTask;
  */
 public class ConfigsContextLifeCycle implements GenericApplicationListener {
     // 刷新定时器
-    private Timer refreshTimer;
+    private Timer refreshTimer = null;
 
     @Override
     public boolean supportsEventType(ResolvableType eventType) {
@@ -54,7 +55,6 @@ public class ConfigsContextLifeCycle implements GenericApplicationListener {
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ApplicationReadyEvent) {
             readyConfigsContext();
-            initTimer();
         } else {
             close();
         }
@@ -76,11 +76,13 @@ public class ConfigsContextLifeCycle implements GenericApplicationListener {
             Config config = configsContext.getConfig(appId);
             config.getListenerRegistrar().register(new DefaultConfigListener(appId, eventPublisher));
         }
-        // 判断是否开启监听配置变更事件
-        boolean enable = Contexts.getEnvironment().getProperty(ConfigcenterProperties.LISTEN_CONFIGS_ENABLE_KEY, Boolean.class, Boolean.TRUE);
+        // 判断是否开启自动刷新配置
+        boolean enable = Contexts.getEnvironment().getProperty(ConfigcenterProperties.AUTO_REFRESH_CONFIGS_ENABLE_KEY, Boolean.class, Boolean.TRUE);
         if (enable) {
             // 开始监听配置变更事件
             configsContext.listenConfigs();
+            // 定时刷新
+            initTimer();
         }
     }
 
@@ -92,10 +94,11 @@ public class ConfigsContextLifeCycle implements GenericApplicationListener {
                 ConfigsContexts.getContext().refresh();
             }
         };
+        long period = Contexts.getEnvironment().getProperty(ConfigcenterProperties.AUTO_REFRESH_CONFIGS_PERIOD_KEY, Long.class, 5 * 60 * 1000L);
+        Assert.isTrue(period > 0, String.format("自动刷新configcenter配置的周期[%s]必须大于0，当前值=%d", ConfigcenterProperties.AUTO_REFRESH_CONFIGS_PERIOD_KEY, period));
 
         refreshTimer = new Timer("Timer-refreshConfigsContext", true);
-        // 应用启动期间配置有可能被修改，在此立即触发一次刷新
-        refreshTimer.schedule(task, 0, ConfigcenterProperties.INSTANCE.getRefreshPeriod() * 1000);
+        refreshTimer.schedule(task, period, period);
     }
 
     // 关闭配置上下文和刷新定时器

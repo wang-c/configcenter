@@ -8,11 +8,12 @@
  */
 package org.antframework.configcenter.biz.service;
 
+import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.BizException;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.EmptyResult;
 import org.antframework.common.util.facade.Status;
-import org.antframework.configcenter.biz.util.RefreshUtils;
+import org.antframework.configcenter.biz.util.Refreshes;
 import org.antframework.configcenter.dal.dao.ProfileDao;
 import org.antframework.configcenter.dal.entity.Profile;
 import org.antframework.configcenter.facade.order.AddOrModifyProfileOrder;
@@ -21,7 +22,6 @@ import org.bekit.service.annotation.service.ServiceAfter;
 import org.bekit.service.annotation.service.ServiceExecute;
 import org.bekit.service.engine.ServiceContext;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Objects;
 
@@ -29,9 +29,10 @@ import java.util.Objects;
  * 添加或修改环境服务
  */
 @Service(enableTx = true)
+@AllArgsConstructor
 public class AddOrModifyProfileService {
-    @Autowired
-    private ProfileDao profileDao;
+    // 环境dao
+    private final ProfileDao profileDao;
 
     @ServiceExecute
     public void execute(ServiceContext<AddOrModifyProfileOrder, EmptyResult> context) {
@@ -66,9 +67,7 @@ public class AddOrModifyProfileService {
     @ServiceAfter
     public void after(ServiceContext<AddOrModifyProfileOrder, EmptyResult> context) {
         AddOrModifyProfileOrder order = context.getOrder();
-        // 刷新zookeeper
-        RefreshUtils.refreshZk();
         // 刷新客户端
-        RefreshUtils.refreshClients(null, order.getProfileId());
+        Refreshes.refreshClients(null, order.getProfileId());
     }
 }

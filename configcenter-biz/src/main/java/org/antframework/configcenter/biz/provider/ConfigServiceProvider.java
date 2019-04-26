@@ -8,30 +8,31 @@
  */
 package org.antframework.configcenter.biz.provider;
 
+import lombok.AllArgsConstructor;
 import org.antframework.configcenter.facade.api.ConfigService;
-import org.antframework.configcenter.facade.order.FindAppSelfPropertiesOrder;
-import org.antframework.configcenter.facade.order.FindPropertiesOrder;
-import org.antframework.configcenter.facade.result.FindAppSelfPropertiesResult;
-import org.antframework.configcenter.facade.result.FindPropertiesResult;
+import org.antframework.configcenter.facade.order.FindAppSelfConfigOrder;
+import org.antframework.configcenter.facade.order.FindConfigOrder;
+import org.antframework.configcenter.facade.result.FindAppSelfConfigResult;
+import org.antframework.configcenter.facade.result.FindConfigResult;
 import org.bekit.service.ServiceEngine;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
  * 配置服务提供者
  */
 @Service
+@AllArgsConstructor
 public class ConfigServiceProvider implements ConfigService {
-    @Autowired
-    private ServiceEngine serviceEngine;
+    // 服务引擎
+    private final ServiceEngine serviceEngine;
 
     @Override
-    public FindPropertiesResult findProperties(FindPropertiesOrder order) {
-        return serviceEngine.execute("findPropertiesService", order);
+    public FindConfigResult findConfig(FindConfigOrder order) {
+        return serviceEngine.execute("findConfigService", order);
     }
 
     @Override
-    public FindAppSelfPropertiesResult findAppSelfProperties(FindAppSelfPropertiesOrder order) {
-        return serviceEngine.execute("findAppSelfPropertiesService", order);
+    public FindAppSelfConfigResult findAppSelfConfig(FindAppSelfConfigOrder order) {
+        return serviceEngine.execute("findAppSelfConfigService", order);
     }
 }

@@ -8,8 +8,12 @@
  */
 package org.antframework.configcenter.biz.service;
 
+import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.*;
-import org.antframework.configcenter.biz.util.*;
+import org.antframework.configcenter.biz.util.Profiles;
+import org.antframework.configcenter.biz.util.PropertyKeys;
+import org.antframework.configcenter.biz.util.PropertyValues;
+import org.antframework.configcenter.biz.util.Releases;
 import org.antframework.configcenter.dal.dao.AppDao;
 import org.antframework.configcenter.dal.entity.App;
 import org.antframework.configcenter.facade.api.PropertyKeyService;
@@ -19,21 +23,20 @@ import org.antframework.configcenter.facade.order.DeleteAppOrder;
 import org.antframework.configcenter.facade.order.DeletePropertyKeyOrder;
 import org.antframework.configcenter.facade.vo.Scope;
 import org.bekit.service.annotation.service.Service;
-import org.bekit.service.annotation.service.ServiceAfter;
 import org.bekit.service.annotation.service.ServiceExecute;
 import org.bekit.service.engine.ServiceContext;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 删除应用服务
  */
 @Service(enableTx = true)
+@AllArgsConstructor
 public class DeleteAppService {
-    @Autowired
-    private AppDao appDao;
-    @Autowired
-    private PropertyKeyService propertyKeyService;
+    // 应用dao
+    private final AppDao appDao;
+    // 配置key服务
+    private final PropertyKeyService propertyKeyService;
 
     @ServiceExecute
     public void execute(ServiceContext<DeleteAppOrder, EmptyResult> context) {
@@ -47,13 +50,13 @@ public class DeleteAppService {
             throw new BizException(Status.FAIL, CommonResultCode.ILLEGAL_STATE.getCode(), String.format("应用[%s]存在子应用，不能删除", order.getAppId()));
         }
         // 删除该应用的所有配置key
-        for (PropertyKeyInfo propertyKey : PropertyKeyUtils.findAppPropertyKeys(order.getAppId(), Scope.PRIVATE)) {
+        for (PropertyKeyInfo propertyKey : PropertyKeys.findAppPropertyKeys(order.getAppId(), Scope.PRIVATE)) {
             deletePropertyKey(propertyKey);
         }
         // 删除该应用的在所有环境的配置value和发布
-        for (ProfileInfo profile : ProfileUtils.findAllProfiles()) {
-            PropertyValueUtils.deleteAppProfilePropertyValues(order.getAppId(), profile.getProfileId());
-            ReleaseUtils.deleteAppProfileReleases(order.getAppId(), profile.getProfileId());
+        for (ProfileInfo profile : Profiles.findAllProfiles()) {
+            PropertyValues.deleteAppProfilePropertyValues(order.getAppId(), profile.getProfileId());
+            Releases.deleteAppProfileReleases(order.getAppId(), profile.getProfileId());
         }
         // 删除应用
         appDao.delete(app);
@@ -66,11 +69,5 @@ public class DeleteAppService {
 
         EmptyResult result = propertyKeyService.deletePropertyKey(order);
         FacadeUtils.assertSuccess(result);
-    }
-
-    @ServiceAfter
-    public void after(ServiceContext<DeleteAppOrder, EmptyResult> context) {
-        // 刷新zookeeper
-        RefreshUtils.refreshZk();
     }
 }

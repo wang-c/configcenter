@@ -8,6 +8,7 @@
  */
 package org.antframework.configcenter.spring.listener;
 
+import lombok.AllArgsConstructor;
 import org.antframework.configcenter.client.ConfigListener;
 import org.antframework.configcenter.client.core.ChangedProperty;
 import org.antframework.configcenter.spring.listener.annotation.ConfigChangedEvent;
@@ -21,11 +22,8 @@ import java.util.Map;
 /**
  * 默认的配置监听器（将配置变更消息通知到@ConfigListener监听器）
  */
+@AllArgsConstructor
 public class DefaultConfigListener implements ConfigListener {
-    /**
-     * 无前缀
-     */
-    public static final String NONE_PREFIX = "";
     // key的分隔符
     private static final char KEY_SEPARATOR = '.';
 
@@ -33,11 +31,6 @@ public class DefaultConfigListener implements ConfigListener {
     private final String appId;
     // 事件发布器
     private final EventPublisher eventPublisher;
-
-    public DefaultConfigListener(String appId, EventPublisher eventPublisher) {
-        this.appId = appId;
-        this.eventPublisher = eventPublisher;
-    }
 
     @Override
     public void onChange(List<ChangedProperty> changedProperties) {
@@ -63,7 +56,7 @@ public class DefaultConfigListener implements ConfigListener {
             dispatch(nextPrefixKey, dispatchedCps.get(prefix));
         }
         // 发送事件
-        eventPublisher.publish(new ConfigChangedEvent(appId, prefixKey == null ? NONE_PREFIX : prefixKey, cps));
+        eventPublisher.publish(new ConfigChangedEvent(appId, prefixKey, cps));
     }
 
     // 获取前缀（aa.bb.cc返回aa）

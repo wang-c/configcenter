@@ -13,10 +13,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.antframework.common.util.facade.*;
 import org.antframework.common.util.tostring.ToString;
-import org.antframework.configcenter.biz.util.AppUtils;
-import org.antframework.configcenter.biz.util.ConfigUtils;
-import org.antframework.configcenter.biz.util.PropertyValueUtils;
-import org.antframework.configcenter.biz.util.ReleaseUtils;
+import org.antframework.configcenter.biz.util.Apps;
+import org.antframework.configcenter.biz.util.Configs;
+import org.antframework.configcenter.biz.util.PropertyValues;
+import org.antframework.configcenter.biz.util.Releases;
 import org.antframework.configcenter.facade.api.ReleaseService;
 import org.antframework.configcenter.facade.info.AppInfo;
 import org.antframework.configcenter.facade.info.PropertyValueInfo;
@@ -35,7 +35,6 @@ import org.antframework.configcenter.web.common.Properties;
 import org.antframework.manager.facade.enums.ManagerType;
 import org.antframework.manager.facade.info.ManagerInfo;
 import org.antframework.manager.web.Managers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -50,11 +49,13 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/manage/release")
+@AllArgsConstructor
 public class ReleaseController {
     // 掩码后的配置value
     private static final String MASKED_VALUE = "******";
-    @Autowired
-    private ReleaseService releaseService;
+
+    // 发布服务
+    private final ReleaseService releaseService;
 
     /**
      * 新增发布
@@ -69,9 +70,9 @@ public class ReleaseController {
         ManagerInfo manager = Managers.currentManager();
         if (manager.getType() != ManagerType.ADMIN) {
             // 校验是否有敏感配置被修改
-            List<PropertyValueInfo> propertyValues = PropertyValueUtils.findAppProfilePropertyValues(appId, profileId, Scope.PRIVATE);
+            List<PropertyValueInfo> propertyValues = PropertyValues.findAppProfilePropertyValues(appId, profileId, Scope.PRIVATE);
             List<Property> left = propertyValues.stream().map(propertyValue -> new Property(propertyValue.getKey(), propertyValue.getValue(), propertyValue.getScope())).collect(Collectors.toList());
-            List<Property> right = ReleaseUtils.findCurrentRelease(appId, profileId).getProperties();
+            List<Property> right = Releases.findCurrentRelease(appId, profileId).getProperties();
 
             Properties.Difference difference = Properties.compare(left, right);
             Properties.onlyReadWrite(appId, difference);
@@ -101,11 +102,11 @@ public class ReleaseController {
         ManagerInfo manager = Managers.currentManager();
         if (manager.getType() != ManagerType.ADMIN) {
             // 校验是否有敏感配置被修改
-            ReleaseInfo targetRelease = ReleaseUtils.findRelease(appId, profileId, targetVersion);
+            ReleaseInfo targetRelease = Releases.findRelease(appId, profileId, targetVersion);
             if (targetRelease == null) {
                 throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("发布[appId=%s,profileId=%s,version=%d]不存在", appId, profileId, targetVersion));
             }
-            ReleaseInfo currentRelease = ReleaseUtils.findCurrentRelease(appId, profileId);
+            ReleaseInfo currentRelease = Releases.findCurrentRelease(appId, profileId);
 
             Properties.Difference difference = Properties.compare(targetRelease.getProperties(), currentRelease.getProperties());
             Properties.onlyReadWrite(appId, difference);
@@ -200,16 +201,12 @@ public class ReleaseController {
     public CompareReleasesResult compareReleases(String appId, String profileId, Long leftVersion, Long rightVersion) {
         ManagerApps.adminOrHaveApp(appId);
 
-        List<Property> left = ReleaseUtils.findRelease(appId, profileId, leftVersion).getProperties();
-        List<Property> right = ReleaseUtils.findRelease(appId, profileId, rightVersion).getProperties();
+        List<Property> left = Releases.findRelease(appId, profileId, leftVersion).getProperties();
+        List<Property> right = Releases.findRelease(appId, profileId, rightVersion).getProperties();
         Properties.Difference difference = Properties.compare(left, right);
 
-        CompareReleasesResult result = new CompareReleasesResult();
-        result.setStatus(Status.SUCCESS);
-        result.setCode(CommonResultCode.SUCCESS.getCode());
-        result.setMessage(CommonResultCode.SUCCESS.getMessage());
+        CompareReleasesResult result = FacadeUtils.buildSuccess(CompareReleasesResult.class);
         result.setDifference(difference);
-
         return result;
     }
 
@@ -222,22 +219,18 @@ public class ReleaseController {
     @RequestMapping("/findInheritedReleases")
     public FindInheritedReleasesResult findInheritedReleases(String appId, String profileId) {
         ManagerApps.adminOrHaveApp(appId);
-        FindInheritedReleasesResult result = new FindInheritedReleasesResult();
-        result.setStatus(Status.SUCCESS);
-        result.setCode(CommonResultCode.SUCCESS.getCode());
-        result.setMessage(CommonResultCode.SUCCESS.getMessage());
 
-        for (AppInfo app : AppUtils.findInheritedApps(appId)) {
+        FindInheritedReleasesResult result = FacadeUtils.buildSuccess(FindInheritedReleasesResult.class);
+        for (AppInfo app : Apps.findInheritedApps(appId)) {
             // 获取应用在各环境的发布
             Scope scope = Objects.equals(app.getAppId(), appId) ? Scope.PRIVATE : Scope.PROTECTED;
-            List<ReleaseInfo> inheritedProfileReleases = ConfigUtils.findAppSelfProperties(app.getAppId(), profileId, scope);
+            List<ReleaseInfo> inheritedProfileReleases = Configs.findAppSelfConfig(app.getAppId(), profileId, scope);
             FindInheritedReleasesResult.AppRelease appRelease = new FindInheritedReleasesResult.AppRelease(app, inheritedProfileReleases);
             // 掩码
             maskAppRelease(appRelease);
 
             result.addInheritedAppRelease(appRelease);
         }
-
         return result;
     }
 
@@ -293,7 +286,7 @@ public class ReleaseController {
     @Getter
     public static class FindInheritedReleasesResult extends AbstractResult {
         // 由近及远继承的所用应用的发布
-        private List<AppRelease> inheritedAppReleases = new ArrayList<>();
+        private final List<AppRelease> inheritedAppReleases = new ArrayList<>();
 
         public void addInheritedAppRelease(AppRelease appRelease) {
             inheritedAppReleases.add(appRelease);

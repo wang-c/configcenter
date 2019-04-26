@@ -20,7 +20,9 @@ import java.util.Map;
  */
 @Getter
 @Setter
-public class FindPropertiesResult extends AbstractResult {
+public class FindConfigResult extends AbstractResult {
+    // 版本
+    private Long version;
     // 配置
     @HideDetail
     private Map<String, String> properties;

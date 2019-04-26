@@ -11,7 +11,7 @@ package org.antframework.configcenter.biz.service;
 import org.antframework.common.util.facade.BizException;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.Status;
-import org.antframework.configcenter.biz.util.ProfileUtils;
+import org.antframework.configcenter.biz.util.Profiles;
 import org.antframework.configcenter.facade.info.ProfileInfo;
 import org.antframework.configcenter.facade.order.FindInheritedProfilesOrder;
 import org.antframework.configcenter.facade.result.FindInheritedProfilesResult;
@@ -24,7 +24,6 @@ import org.bekit.service.engine.ServiceContext;
  */
 @Service
 public class FindInheritedProfilesService {
-
     @ServiceExecute
     public void execute(ServiceContext<FindInheritedProfilesOrder, FindInheritedProfilesResult> context) {
         FindInheritedProfilesOrder order = context.getOrder();
@@ -32,7 +31,7 @@ public class FindInheritedProfilesService {
 
         String profileId = order.getProfileId();
         while (profileId != null) {
-            ProfileInfo profile = ProfileUtils.findProfile(profileId);
+            ProfileInfo profile = Profiles.findProfile(profileId);
             if (profile == null) {
                 throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("环境[%s]不存在", profileId));
             }

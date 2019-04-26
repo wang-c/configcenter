@@ -8,11 +8,12 @@
  */
 package org.antframework.configcenter.biz.service;
 
+import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.BizException;
 import org.antframework.common.util.facade.CommonResultCode;
 import org.antframework.common.util.facade.FacadeUtils;
 import org.antframework.common.util.facade.Status;
-import org.antframework.configcenter.biz.util.AppUtils;
+import org.antframework.configcenter.biz.util.Apps;
 import org.antframework.configcenter.dal.dao.AppDao;
 import org.antframework.configcenter.dal.entity.App;
 import org.antframework.configcenter.facade.info.AppInfo;
@@ -22,7 +23,6 @@ import org.antframework.configcenter.facade.result.FindAppTreeResult;
 import org.bekit.service.annotation.service.Service;
 import org.bekit.service.annotation.service.ServiceExecute;
 import org.bekit.service.engine.ServiceContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 
 import java.util.List;
@@ -31,12 +31,13 @@ import java.util.List;
  * 查找应用树服务
  */
 @Service
+@AllArgsConstructor
 public class FindAppTreeService {
     // info转换器
     private static final Converter<App, AppInfo> INFO_CONVERTER = new FacadeUtils.DefaultConverter<>(AppInfo.class);
 
-    @Autowired
-    private AppDao appDao;
+    // 应用dao
+    private final AppDao appDao;
 
     @ServiceExecute
     public void execute(ServiceContext<FindAppTreeOrder, FindAppTreeResult> context) {
@@ -45,7 +46,7 @@ public class FindAppTreeService {
 
         AppInfo app = null;
         if (order.getAppId() != null) {
-            app = AppUtils.findApp(order.getAppId());
+            app = Apps.findApp(order.getAppId());
             if (app == null) {
                 throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("应用[%s]不存在", order.getAppId()));
             }

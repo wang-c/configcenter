@@ -13,8 +13,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.antframework.common.util.facade.*;
 import org.antframework.common.util.tostring.ToString;
-import org.antframework.configcenter.biz.util.AppUtils;
-import org.antframework.configcenter.biz.util.PropertyKeyUtils;
+import org.antframework.configcenter.biz.util.Apps;
+import org.antframework.configcenter.biz.util.PropertyKeys;
 import org.antframework.configcenter.facade.api.PropertyKeyService;
 import org.antframework.configcenter.facade.info.AppInfo;
 import org.antframework.configcenter.facade.info.PropertyKeyInfo;
@@ -25,7 +25,6 @@ import org.antframework.configcenter.web.common.KeyPrivileges;
 import org.antframework.configcenter.web.common.ManagerApps;
 import org.antframework.configcenter.web.common.Privilege;
 import org.antframework.manager.web.Managers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,9 +38,10 @@ import java.util.Objects;
  */
 @RestController
 @RequestMapping("/manage/propertyKey")
+@AllArgsConstructor
 public class PropertyKeyController {
-    @Autowired
-    private PropertyKeyService propertyKeyService;
+    // 配置key服务
+    private final PropertyKeyService propertyKeyService;
 
     /**
      * 新增或修改配置key
@@ -94,15 +94,11 @@ public class PropertyKeyController {
     public FindInheritedPropertyKeysResult findInheritedPropertyKeys(String appId) {
         ManagerApps.adminOrHaveApp(appId);
 
-        FindInheritedPropertyKeysResult result = new FindInheritedPropertyKeysResult();
-        result.setStatus(Status.SUCCESS);
-        result.setCode(CommonResultCode.SUCCESS.getCode());
-        result.setMessage(CommonResultCode.SUCCESS.getMessage());
-        for (AppInfo app : AppUtils.findInheritedApps(appId)) {
-            List<PropertyKeyInfo> propertyKeys = PropertyKeyUtils.findAppPropertyKeys(app.getAppId(), Scope.PRIVATE);
+        FindInheritedPropertyKeysResult result = FacadeUtils.buildSuccess(FindInheritedPropertyKeysResult.class);
+        for (AppInfo app : Apps.findInheritedApps(appId)) {
+            List<PropertyKeyInfo> propertyKeys = PropertyKeys.findAppPropertyKeys(app.getAppId(), Scope.PRIVATE);
             result.addAppPropertyKey(new FindInheritedPropertyKeysResult.AppPropertyKey(app, propertyKeys));
         }
-
         return result;
     }
 
@@ -116,12 +112,8 @@ public class PropertyKeyController {
     public FindInheritedPrivilegesResult findInheritedPrivileges(String appId) {
         ManagerApps.adminOrHaveApp(appId);
 
-        FindInheritedPrivilegesResult result = new FindInheritedPrivilegesResult();
-        result.setStatus(Status.SUCCESS);
-        result.setCode(CommonResultCode.SUCCESS.getCode());
-        result.setMessage(CommonResultCode.SUCCESS.getMessage());
+        FindInheritedPrivilegesResult result = FacadeUtils.buildSuccess(FindInheritedPrivilegesResult.class);
         result.setAppPrivileges(KeyPrivileges.findInheritedPrivileges(appId));
-
         return result;
     }
 
@@ -139,16 +131,12 @@ public class PropertyKeyController {
         // 设置权限
         KeyPrivileges.setPrivilege(appId, key, privilege);
 
-        EmptyResult result = new EmptyResult();
-        result.setStatus(Status.SUCCESS);
-        result.setCode(CommonResultCode.SUCCESS.getCode());
-        result.setMessage(CommonResultCode.SUCCESS.getMessage());
-        return result;
+        return FacadeUtils.buildSuccess(EmptyResult.class);
     }
 
     // 断言存在配置key
     private void assertExistingKey(String appId, String key) {
-        List<PropertyKeyInfo> propertyKeys = PropertyKeyUtils.findAppPropertyKeys(appId, Scope.PRIVATE);
+        List<PropertyKeyInfo> propertyKeys = PropertyKeys.findAppPropertyKeys(appId, Scope.PRIVATE);
         for (PropertyKeyInfo propertyKey : propertyKeys) {
             if (Objects.equals(propertyKey.getKey(), key)) {
                 return;
