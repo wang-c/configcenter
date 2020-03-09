@@ -14,7 +14,7 @@ import org.antframework.common.util.facade.AbstractInfo;
 import org.antframework.configcenter.facade.vo.Property;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 /**
  * 发布info
@@ -32,6 +32,8 @@ public class ReleaseInfo extends AbstractInfo {
     private Date releaseTime;
     // 备注
     private String memo;
-    // 配置项集合
-    private List<Property> properties;
+    // 配置集
+    private Set<Property> properties;
+    // 父版本
+    private Long parentVersion;
 }

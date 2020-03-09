@@ -16,13 +16,16 @@ import org.antframework.configcenter.facade.vo.Property;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 发布
  */
 @Entity
-@Table(name = "`Release`", uniqueConstraints = @UniqueConstraint(name = "uk_appId_profileId_version", columnNames = {"appId", "profileId", "version"}))
+@Table(name = "`Release`",
+        uniqueConstraints = @UniqueConstraint(name = "uk_appId_profileId_version", columnNames = {"appId", "profileId", "version"}),
+        indexes = @Index(name = "idx_appId_profileId_parentVersion", columnList = "appId,profileId,parentVersion"))
 @Getter
 @Setter
 public class Release extends AbstractEntity {
@@ -46,17 +49,21 @@ public class Release extends AbstractEntity {
     @Column
     private String memo;
 
-    // 配置项集合
+    // 配置集
     @Column(length = 1024 * 1024)
     @Convert(converter = PropertiesConverter.class)
-    private List<Property> properties;
+    private Set<Property> properties;
+
+    // 父版本
+    @Column
+    private Long parentVersion;
 
     /**
-     * 配置项集合的jpa转换器
+     * 配置集的jpa转换器
      */
-    public static class PropertiesConverter implements AttributeConverter<List<Property>, String> {
+    public static class PropertiesConverter implements AttributeConverter<Set<Property>, String> {
         @Override
-        public String convertToDatabaseColumn(List<Property> attribute) {
+        public String convertToDatabaseColumn(Set<Property> attribute) {
             if (attribute == null) {
                 return null;
             }
@@ -64,11 +71,11 @@ public class Release extends AbstractEntity {
         }
 
         @Override
-        public List<Property> convertToEntityAttribute(String dbData) {
+        public Set<Property> convertToEntityAttribute(String dbData) {
             if (dbData == null) {
                 return null;
             }
-            return JSON.parseArray(dbData, Property.class);
+            return new HashSet<>(JSON.parseArray(dbData, Property.class));
         }
     }
 }

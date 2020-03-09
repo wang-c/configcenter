@@ -16,7 +16,7 @@ import org.antframework.configcenter.facade.result.FindInheritedProfilesResult;
 import org.antframework.configcenter.facade.result.FindProfileResult;
 import org.antframework.configcenter.facade.result.FindProfileTreeResult;
 import org.antframework.configcenter.facade.result.QueryProfilesResult;
-import org.antframework.manager.web.Managers;
+import org.antframework.manager.web.CurrentManagers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,13 +33,13 @@ public class ProfileController {
     /**
      * 新增或修改环境
      *
-     * @param profileId   环境id（必须）
-     * @param profileName 环境名（可选）
-     * @param parent      父环境id（可选）
+     * @param profileId   环境id
+     * @param profileName 环境名
+     * @param parent      父环境id
      */
     @RequestMapping("/addOrModifyProfile")
     public EmptyResult addOrModifyProfile(String profileId, String profileName, String parent) {
-        Managers.admin();
+        CurrentManagers.admin();
         AddOrModifyProfileOrder order = new AddOrModifyProfileOrder();
         order.setProfileId(profileId);
         order.setProfileName(profileName);
@@ -51,11 +51,11 @@ public class ProfileController {
     /**
      * 删除环境
      *
-     * @param profileId 环境id（必须）
+     * @param profileId 环境id
      */
     @RequestMapping("/deleteProfile")
     public EmptyResult deleteProfile(String profileId) {
-        Managers.admin();
+        CurrentManagers.admin();
         DeleteProfileOrder order = new DeleteProfileOrder();
         order.setProfileId(profileId);
 
@@ -65,11 +65,11 @@ public class ProfileController {
     /**
      * 查找环境
      *
-     * @param profileId 环境id（必填）
+     * @param profileId 环境id
      */
     @RequestMapping("/findProfile")
     public FindProfileResult findProfile(String profileId) {
-        Managers.currentManager();
+        CurrentManagers.current();
         FindProfileOrder order = new FindProfileOrder();
         order.setProfileId(profileId);
 
@@ -79,11 +79,11 @@ public class ProfileController {
     /**
      * 查找环境继承的所有环境
      *
-     * @param profileId 环境id（必填）
+     * @param profileId 环境id
      */
     @RequestMapping("/findInheritedProfiles")
     public FindInheritedProfilesResult findInheritedProfiles(String profileId) {
-        Managers.currentManager();
+        CurrentManagers.current();
         FindInheritedProfilesOrder order = new FindInheritedProfilesOrder();
         order.setProfileId(profileId);
 
@@ -93,13 +93,13 @@ public class ProfileController {
     /**
      * 查找环境树
      *
-     * @param profileId 根节点环境id（不填表示查找所有环境）
+     * @param rootProfileId 根节点环境id（不填表示查找所有环境）
      */
     @RequestMapping("/findProfileTree")
-    public FindProfileTreeResult findProfileTree(String profileId) {
-        Managers.currentManager();
+    public FindProfileTreeResult findProfileTree(String rootProfileId) {
+        CurrentManagers.current();
         FindProfileTreeOrder order = new FindProfileTreeOrder();
-        order.setProfileId(profileId);
+        order.setRootProfileId(rootProfileId);
 
         return profileService.findProfileTree(order);
     }
@@ -107,13 +107,13 @@ public class ProfileController {
     /**
      * 分页查询环境
      *
-     * @param pageNo    页码（必须）
-     * @param pageSize  每页大小（必须）
-     * @param profileId 环境id（可选）
+     * @param pageNo    页码
+     * @param pageSize  每页大小
+     * @param profileId 环境id
      */
     @RequestMapping("/queryProfiles")
     public QueryProfilesResult queryProfiles(int pageNo, int pageSize, String profileId) {
-        Managers.currentManager();
+        CurrentManagers.current();
         QueryProfilesOrder order = new QueryProfilesOrder();
         order.setPageNo(pageNo);
         order.setPageSize(pageSize);

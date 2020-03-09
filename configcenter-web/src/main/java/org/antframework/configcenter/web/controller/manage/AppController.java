@@ -11,7 +11,7 @@ package org.antframework.configcenter.web.controller.manage;
 import lombok.AllArgsConstructor;
 import org.antframework.common.util.facade.AbstractQueryResult;
 import org.antframework.common.util.facade.EmptyResult;
-import org.antframework.common.util.facade.FacadeUtils;
+import org.antframework.configcenter.biz.util.Apps;
 import org.antframework.configcenter.facade.api.AppService;
 import org.antframework.configcenter.facade.info.AppInfo;
 import org.antframework.configcenter.facade.order.*;
@@ -19,11 +19,11 @@ import org.antframework.configcenter.facade.result.FindAppResult;
 import org.antframework.configcenter.facade.result.FindAppTreeResult;
 import org.antframework.configcenter.facade.result.FindInheritedAppsResult;
 import org.antframework.configcenter.facade.result.QueryAppsResult;
-import org.antframework.configcenter.web.common.KeyPrivileges;
 import org.antframework.configcenter.web.common.ManagerApps;
+import org.antframework.configcenter.web.common.OperatePrivileges;
 import org.antframework.manager.facade.enums.ManagerType;
 import org.antframework.manager.facade.info.ManagerInfo;
-import org.antframework.manager.web.Managers;
+import org.antframework.manager.web.CurrentManagers;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,13 +41,13 @@ public class AppController {
     /**
      * 添加或修改应用
      *
-     * @param appId   应用id（必须）
-     * @param appName 应用名（可选）
-     * @param parent  父应用id（可选）
+     * @param appId   应用id
+     * @param appName 应用名
+     * @param parent  父应用id
      */
     @RequestMapping("/addOrModifyApp")
     public EmptyResult addOrModifyApp(String appId, String appName, String parent) {
-        Managers.admin();
+        CurrentManagers.admin();
         AddOrModifyAppOrder order = new AddOrModifyAppOrder();
         order.setAppId(appId);
         order.setAppName(appName);
@@ -59,11 +59,11 @@ public class AppController {
     /**
      * 删除应用
      *
-     * @param appId 应用id（必须）
+     * @param appId 应用id
      */
     @RequestMapping("/deleteApp")
     public EmptyResult deleteApp(String appId) {
-        Managers.admin();
+        CurrentManagers.admin();
         // 删除管理员和应用的关联
         ManagerApps.deletesByApp(appId);
         // 删除应用
@@ -72,7 +72,7 @@ public class AppController {
         EmptyResult result = appService.deleteApp(order);
         if (result.isSuccess()) {
             // 删除应用的所有配置key的权限
-            KeyPrivileges.deletePrivileges(appId, null);
+            OperatePrivileges.deleteOperatePrivileges(appId, null);
         }
         return result;
     }
@@ -80,11 +80,11 @@ public class AppController {
     /**
      * 查找应用
      *
-     * @param appId 应用id（必须）
+     * @param appId 应用id
      */
     @RequestMapping("/findApp")
     public FindAppResult findApp(String appId) {
-        Managers.currentManager();
+        CurrentManagers.current();
         FindAppOrder order = new FindAppOrder();
         order.setAppId(appId);
 
@@ -94,7 +94,7 @@ public class AppController {
     /**
      * 查找应用继承的所有应用
      *
-     * @param appId 应用id（必须）
+     * @param appId 应用id
      */
     @RequestMapping("/findInheritedApps")
     public FindInheritedAppsResult findInheritedApps(String appId) {
@@ -108,13 +108,13 @@ public class AppController {
     /**
      * 查找应用树
      *
-     * @param appId 根节点应用id（不填表示查找所有应用）
+     * @param rootAppId 根节点应用id（不填表示查找所有应用）
      */
     @RequestMapping("/findAppTree")
-    private FindAppTreeResult findAppTree(String appId) {
-        ManagerApps.adminOrHaveApp(appId);
+    private FindAppTreeResult findAppTree(String rootAppId) {
+        ManagerApps.adminOrHaveApp(rootAppId);
         FindAppTreeOrder order = new FindAppTreeOrder();
-        order.setAppId(appId);
+        order.setRootAppId(rootAppId);
 
         return appService.findAppTree(order);
     }
@@ -122,14 +122,14 @@ public class AppController {
     /**
      * 分页查询应用
      *
-     * @param pageNo   页码（必须）
-     * @param pageSize 每页大小（必须）
-     * @param appId    应用id（可选）
-     * @param parent   父应用id（可选）
+     * @param pageNo   页码
+     * @param pageSize 每页大小
+     * @param appId    应用id
+     * @param parent   父应用id
      */
     @RequestMapping("/queryApps")
     public QueryAppsResult queryApps(int pageNo, int pageSize, String appId, String parent) {
-        Managers.admin();
+        CurrentManagers.admin();
         QueryAppsOrder order = new QueryAppsOrder();
         order.setPageNo(pageNo);
         order.setPageSize(pageSize);
@@ -142,13 +142,13 @@ public class AppController {
     /**
      * 查询被管理的应用
      *
-     * @param pageNo   页码（必须）
-     * @param pageSize 每页大小（必须）
-     * @param appId    应用id（可选）
+     * @param pageNo   页码
+     * @param pageSize 每页大小
+     * @param appId    应用id
      */
     @RequestMapping("/queryManagedApps")
     public QueryManagedAppsResult queryManagedApps(int pageNo, int pageSize, String appId) {
-        ManagerInfo manager = Managers.currentManager();
+        ManagerInfo manager = CurrentManagers.current();
         if (manager.getType() == ManagerType.ADMIN) {
             return forAdmin(pageNo, pageSize, appId);
         } else {
@@ -172,10 +172,9 @@ public class AppController {
         BeanUtils.copyProperties(appIdsResult, result, "infos");
         // 查找应用
         for (String appId : appIdsResult.getInfos()) {
-            FindAppResult findAppResult = findApp(appId);
-            FacadeUtils.assertSuccess(findAppResult);
-            if (findAppResult.getApp() != null) {
-                result.addInfo(findAppResult.getApp());
+            AppInfo app = Apps.findApp(appId);
+            if (app != null) {
+                result.addInfo(app);
             }
         }
         return result;

@@ -40,6 +40,8 @@ public class ConfigController {
     private static final int LISTEN_MAX_TIMEOUT = 90000;
     // 随机数
     private static final Random RANDOM = new Random();
+    // 超时的监听result
+    private static final ListeningClientsContainer.ListenResult TIMEOUT_LISTEN_RESULT = FacadeUtils.buildSuccess(ListeningClientsContainer.ListenResult.class);
 
     // 配置服务
     private final ConfigService configService;
@@ -49,16 +51,18 @@ public class ConfigController {
     /**
      * 查找应用在指定环境中的配置
      *
-     * @param mainAppId    主体应用id（必须）
-     * @param queriedAppId 被查询配置的应用id（必须）
-     * @param profileId    环境id（必须）
+     * @param mainAppId    主体应用id
+     * @param queriedAppId 被查询配置的应用id
+     * @param profileId    环境id
+     * @param target       目标
      */
     @RequestMapping("/findConfig")
-    public FindConfigResult findConfig(String mainAppId, String queriedAppId, String profileId) {
+    public FindConfigResult findConfig(String mainAppId, String queriedAppId, String profileId, String target) {
         FindConfigOrder order = new FindConfigOrder();
         order.setMainAppId(mainAppId);
         order.setQueriedAppId(queriedAppId);
         order.setProfileId(profileId);
+        order.setTarget(target);
 
         return configService.findConfig(order);
     }
@@ -66,23 +70,22 @@ public class ConfigController {
     /**
      * 监听刷新客户端事件
      *
-     * @param listenMetas 监听元数据（必须）
+     * @param listenMetas 监听元数据
+     * @param target      目标
      */
     @RequestMapping("/listen")
-    public DeferredResult<ListeningClientsContainer.ListenResult> listen(@RequestParam Set<ListenMeta> listenMetas) {
+    public DeferredResult<ListeningClientsContainer.ListenResult> listen(@RequestParam Set<ListenMeta> listenMetas, String target) {
         // 查找需要立即刷新的配置主题
         ListeningClientsContainer.ListenResult listenResult = FacadeUtils.buildSuccess(ListeningClientsContainer.ListenResult.class);
         for (ListenMeta listenMeta : listenMetas) {
-            FindConfigResult findConfigResult = findConfig(listenMeta.getTopic().getAppId(), listenMeta.getTopic().getAppId(), listenMeta.getTopic().getProfileId());
+            FindConfigResult findConfigResult = findConfig(listenMeta.getTopic().getAppId(), listenMeta.getTopic().getAppId(), listenMeta.getTopic().getProfileId(), target);
             FacadeUtils.assertSuccess(findConfigResult);
             if (!Objects.equals(listenMeta.getConfigVersion(), findConfigResult.getVersion())) {
                 listenResult.addTopic(listenMeta.getTopic());
             }
         }
         // 构建异步返回结果
-        DeferredResult<ListeningClientsContainer.ListenResult> deferredResult = new DeferredResult<>(
-                (long) LISTEN_MIN_TIMEOUT + RANDOM.nextInt(LISTEN_MAX_TIMEOUT - LISTEN_MIN_TIMEOUT),
-                FacadeUtils.buildSuccess(ListeningClientsContainer.ListenResult.class));
+        DeferredResult<ListeningClientsContainer.ListenResult> deferredResult = new DeferredResult<>(generateTimeout(), TIMEOUT_LISTEN_RESULT);
         if (listenMetas.isEmpty() || !listenResult.getTopics().isEmpty()) {
             // 直接设置返回结果
             deferredResult.setResult(listenResult);
@@ -94,6 +97,11 @@ public class ConfigController {
             deferredResult.onCompletion(() -> listeningClientsContainer.removeClient(listeningClient));
         }
         return deferredResult;
+    }
+
+    // 生成超时时间
+    private long generateTimeout() {
+        return LISTEN_MIN_TIMEOUT + RANDOM.nextInt(LISTEN_MAX_TIMEOUT - LISTEN_MIN_TIMEOUT);
     }
 
     /**

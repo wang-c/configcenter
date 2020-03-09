@@ -11,7 +11,8 @@ package org.antframework.configcenter.facade.order;
 import lombok.Getter;
 import lombok.Setter;
 import org.antframework.common.util.facade.AbstractOrder;
-import org.hibernate.validator.constraints.NotBlank;
+
+import javax.validation.constraints.NotBlank;
 
 /**
  * 查找应用在指定环境中的配置order
@@ -28,4 +29,6 @@ public class FindConfigOrder extends AbstractOrder {
     // 环境id
     @NotBlank
     private String profileId;
+    // 目标
+    private String target;
 }

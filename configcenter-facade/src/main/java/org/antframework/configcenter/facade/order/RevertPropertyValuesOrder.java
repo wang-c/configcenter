@@ -12,9 +12,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.antframework.common.util.facade.AbstractOrder;
 import org.antframework.configcenter.facade.vo.ReleaseConstant;
-import org.hibernate.validator.constraints.NotBlank;
 
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -29,6 +29,9 @@ public class RevertPropertyValuesOrder extends AbstractOrder {
     // 环境id
     @NotBlank
     private String profileId;
+    // 分支id
+    @NotBlank
+    private String branchId;
     // 回滚到的目标发布版本
     @Min(ReleaseConstant.ORIGIN_VERSION)
     @NotNull

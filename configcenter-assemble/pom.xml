@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.antframework.configcenter</groupId>
         <artifactId>configcenter</artifactId>
-        <version>1.4.0.RELEASE</version>
+        <version>1.6.1.RELEASE</version>
     </parent>
 
     <artifactId>configcenter-assemble</artifactId>
@@ -20,6 +20,10 @@
             <groupId>org.antframework.configcenter</groupId>
             <artifactId>configcenter-web</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.antframework.boot</groupId>
+            <artifactId>ant-boot-starter-lang</artifactId>
         </dependency>
         <dependency>
             <groupId>org.antframework.boot</groupId>

@@ -13,8 +13,8 @@ import lombok.Setter;
 import org.antframework.common.util.facade.AbstractOrder;
 import org.antframework.common.util.tostring.format.Mask;
 import org.antframework.configcenter.facade.vo.Scope;
-import org.hibernate.validator.constraints.NotBlank;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -26,15 +26,18 @@ public class AddOrModifyPropertyValueOrder extends AbstractOrder {
     // 应用id
     @NotBlank
     private String appId;
-    // key
-    @NotBlank
-    private String key;
     // 环境id
     @NotBlank
     private String profileId;
+    // 分支id
+    @NotBlank
+    private String branchId;
+    // key
+    @NotBlank
+    private String key;
     // value
     @NotBlank
-    @Mask(allMask = true)
+    @Mask(secureMask = true)
     private String value;
     // 作用域
     @NotNull

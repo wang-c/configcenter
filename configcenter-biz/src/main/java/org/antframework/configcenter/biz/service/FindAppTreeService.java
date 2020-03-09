@@ -33,8 +33,8 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class FindAppTreeService {
-    // info转换器
-    private static final Converter<App, AppInfo> INFO_CONVERTER = new FacadeUtils.DefaultConverter<>(AppInfo.class);
+    // 转换器
+    private static final Converter<App, AppInfo> CONVERTER = new FacadeUtils.DefaultConverter<>(AppInfo.class);
 
     // 应用dao
     private final AppDao appDao;
@@ -44,14 +44,14 @@ public class FindAppTreeService {
         FindAppTreeOrder order = context.getOrder();
         FindAppTreeResult result = context.getResult();
 
-        AppInfo app = null;
-        if (order.getAppId() != null) {
-            app = Apps.findApp(order.getAppId());
-            if (app == null) {
-                throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("应用[%s]不存在", order.getAppId()));
+        AppInfo rootApp = null;
+        if (order.getRootAppId() != null) {
+            rootApp = Apps.findApp(order.getRootAppId());
+            if (rootApp == null) {
+                throw new BizException(Status.FAIL, CommonResultCode.INVALID_PARAMETER.getCode(), String.format("应用[%s]不存在", order.getRootAppId()));
             }
         }
-        result.setAppTree(getAppTree(app));
+        result.setAppTree(getAppTree(rootApp));
     }
 
     // 获取应用树
@@ -60,7 +60,7 @@ public class FindAppTreeService {
 
         List<App> childrenApp = appDao.findByParent(app == null ? null : app.getAppId());
         for (App childApp : childrenApp) {
-            AppTree childTree = getAppTree(INFO_CONVERTER.convert(childApp));
+            AppTree childTree = getAppTree(CONVERTER.convert(childApp));
             appTree.addChild(childTree);
         }
 

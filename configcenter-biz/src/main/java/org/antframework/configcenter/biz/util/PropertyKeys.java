@@ -9,11 +9,13 @@
 package org.antframework.configcenter.biz.util;
 
 import org.antframework.boot.core.Contexts;
+import org.antframework.common.util.facade.EmptyResult;
 import org.antframework.common.util.facade.FacadeUtils;
 import org.antframework.configcenter.facade.api.PropertyKeyService;
 import org.antframework.configcenter.facade.info.PropertyKeyInfo;
-import org.antframework.configcenter.facade.order.FindAppPropertyKeysOrder;
-import org.antframework.configcenter.facade.result.FindAppPropertyKeysResult;
+import org.antframework.configcenter.facade.order.DeletePropertyKeyOrder;
+import org.antframework.configcenter.facade.order.FindPropertyKeysOrder;
+import org.antframework.configcenter.facade.result.FindPropertyKeysResult;
 import org.antframework.configcenter.facade.vo.Scope;
 
 import java.util.List;
@@ -26,18 +28,33 @@ public final class PropertyKeys {
     private static final PropertyKeyService PROPERTY_KEY_SERVICE = Contexts.getApplicationContext().getBean(PropertyKeyService.class);
 
     /**
-     * 查找应用的配置key
+     * 删除配置key
+     *
+     * @param appId 应用id
+     * @param key   key
+     */
+    public static void deletePropertyKey(String appId, String key) {
+        DeletePropertyKeyOrder order = new DeletePropertyKeyOrder();
+        order.setAppId(appId);
+        order.setKey(key);
+
+        EmptyResult result = PROPERTY_KEY_SERVICE.deletePropertyKey(order);
+        FacadeUtils.assertSuccess(result);
+    }
+
+    /**
+     * 查找配置key集
      *
      * @param appId    应用id
      * @param minScope 最小作用域
      * @return 应用的配置key
      */
-    public static List<PropertyKeyInfo> findAppPropertyKeys(String appId, Scope minScope) {
-        FindAppPropertyKeysOrder order = new FindAppPropertyKeysOrder();
+    public static List<PropertyKeyInfo> findPropertyKeys(String appId, Scope minScope) {
+        FindPropertyKeysOrder order = new FindPropertyKeysOrder();
         order.setAppId(appId);
         order.setMinScope(minScope);
 
-        FindAppPropertyKeysResult result = PROPERTY_KEY_SERVICE.findAppPropertyKeys(order);
+        FindPropertyKeysResult result = PROPERTY_KEY_SERVICE.findPropertyKeys(order);
         FacadeUtils.assertSuccess(result);
         return result.getPropertyKeys();
     }

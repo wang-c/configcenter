@@ -48,6 +48,8 @@ public class ServerRequester {
     private final String mainAppId;
     // 环境id
     private final String profileId;
+    // 目标
+    private final String target;
     // 服务端地址
     private final String serverUrl;
 
@@ -105,6 +107,9 @@ public class ServerRequester {
             params.add(new BasicNameValuePair("mainAppId", mainAppId));
             params.add(new BasicNameValuePair("queriedAppId", queriedAppId));
             params.add(new BasicNameValuePair("profileId", profileId));
+            if (target != null) {
+                params.add(new BasicNameValuePair("target", target));
+            }
 
             HttpPost httpPost = new HttpPost(serverUrl + FIND_CONFIG_URI);
             httpPost.setConfig(config);
@@ -152,7 +157,7 @@ public class ServerRequester {
                     throw new RuntimeException("请求configcenter失败");
                 }
                 if (!result.isSuccess()) {
-                    throw new RuntimeException("监听configcenter配置失败：" + result.getMessage());
+                    throw new RuntimeException("监听configcenter服务端的配置失败：" + result.getMessage());
                 }
                 return result.getTopics().stream().map(ConfigTopic::getAppId).collect(Collectors.toSet());
             } catch (IOException e) {
@@ -177,6 +182,9 @@ public class ServerRequester {
             }
             List<NameValuePair> params = new ArrayList<>();
             params.add(new BasicNameValuePair("listenMetas", JSON.toJSONString(listenMetas)));
+            if (target != null) {
+                params.add(new BasicNameValuePair("target", target));
+            }
 
             HttpPost httpPost = new HttpPost(serverUrl + LISTEN_URI);
             httpPost.setConfig(config);

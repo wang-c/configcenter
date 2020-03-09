@@ -41,10 +41,11 @@ public class ConfigsContextTest {
         ConfigsContext configsContext = new ConfigsContext(
                 "customer",
                 "dev",
+                null,
                 "http://localhost:6220",
                 cacheDir);
         Config customerConfig = configsContext.getConfig("customer");
-        customerConfig.getListenerRegistrar().register(new ConfigListener() {
+        customerConfig.getListeners().addListener(new ConfigListener() {
             @Override
             public void onChange(List<ChangedProperty> changedProperties) {
                 for (ChangedProperty changedProperty : changedProperties) {
@@ -53,7 +54,7 @@ public class ConfigsContextTest {
             }
         });
         Config accountConfig = configsContext.getConfig("account");
-        accountConfig.getListenerRegistrar().register(new ConfigListener() {
+        accountConfig.getListeners().addListener(new ConfigListener() {
             @Override
             public void onChange(List<ChangedProperty> changedProperties) {
                 for (ChangedProperty changedProperty : changedProperties) {
@@ -61,7 +62,7 @@ public class ConfigsContextTest {
                 }
             }
         });
-        configsContext.listenConfigs();
+        configsContext.listenServer();
         configsContext.refresh();
         try {
             Thread.sleep(200000);

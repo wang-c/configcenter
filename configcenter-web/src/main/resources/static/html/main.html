@@ -5,12 +5,14 @@
     <title>configcenter</title>
     <script src="../common/import.js"></script>
     <script src="../components/Configs.js"></script>
-    <script src="../components/ManagerApps.js"></script>
     <script src="../components/PropertyKeys.js"></script>
+    <script src="../components/OperatePrivileges.js"></script>
     <script src="../components/PropertyValues.js"></script>
+    <script src="../components/Branches.js"></script>
     <script src="../components/Releases.js"></script>
     <script src="../components/Apps.js"></script>
     <script src="../components/Profiles.js"></script>
+    <script src="../components/ManagerApps.js"></script>
     <style>
         .propertyKey-text-style {
             font-size: small;
@@ -48,6 +50,16 @@
         .release-property-text-style {
             font-size: xx-small;
         }
+
+        .keyRegex-text-style {
+            font-size: small;
+        }
+
+        .configcenter-table__empty-text {
+            line-height: 35px;
+            width: 50%;
+            color: #909399;
+        }
     </style>
 </head>
 <body>
@@ -78,11 +90,17 @@
                 template: '<router-view :appId="appId"></router-view>'
             },
             meta: {
-                title: '应用'
+                title: '配置key'
             },
             children: [{
                 path: '',
                 component: PropertyKeys
+            }, {
+                path: 'operatePrivileges',
+                component: OperatePrivileges,
+                meta: {
+                    title: '操作权限'
+                }
             }, {
                 path: ':profileId',
                 props: true,
@@ -91,17 +109,31 @@
                     template: '<router-view :appId="appId" :profileId="profileId"></router-view>'
                 },
                 meta: {
-                    title: '环境'
+                    title: '配置value'
                 },
                 children: [{
                     path: '',
                     component: PropertyValues
                 }, {
-                    path: 'releases',
-                    component: Releases,
+                    path: 'branches',
+                    component: Branches,
+                    meta: {
+                        title: '分支管理'
+                    }
+                }, {
+                    path: 'releases/:branchId',
+                    props: true,
+                    component: {
+                        props: ['appId', 'profileId', 'branchId'],
+                        template: '<router-view :appId="appId" :profileId="profileId" :branchId="branchId"></router-view>'
+                    },
                     meta: {
                         title: '发布历史'
-                    }
+                    },
+                    children: [{
+                        path: '',
+                        component: Releases
+                    }]
                 }]
             }]
         }]

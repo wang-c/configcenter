@@ -27,10 +27,10 @@ public class ConfigRefresher {
 
     // 版本
     private final AtomicLong version;
-    // 配置项集合
+    // 配置集
     private final ConfigurableConfigProperties properties;
-    // 监听器注册器
-    private final ListenerRegistrar listenerRegistrar;
+    // 配置监听器的管理器
+    private final ConfigListeners listeners;
     // 配置请求器
     private final ServerRequester.ConfigRequester configRequester;
     // 缓存文件
@@ -39,12 +39,12 @@ public class ConfigRefresher {
     public ConfigRefresher(String appId,
                            AtomicLong version,
                            ConfigurableConfigProperties properties,
-                           ListenerRegistrar listenerRegistrar,
+                           ConfigListeners listeners,
                            ServerRequester serverRequester,
                            MapFile cacheFile) {
         this.version = version;
         this.properties = properties;
-        this.listenerRegistrar = listenerRegistrar;
+        this.listeners = listeners;
         this.configRequester = serverRequester.createConfigRequester(appId, VERSION_KEY);
         this.cacheFile = cacheFile;
     }
@@ -54,11 +54,13 @@ public class ConfigRefresher {
      */
     public synchronized void initConfig() {
         Map<String, String> config;
+        long version;
         boolean fromServer = true;
         try {
             config = configRequester.findConfig();
+            version = Long.parseLong(config.remove(VERSION_KEY));
         } catch (Throwable e) {
-            log.error("从configcenter读取配置失败：{}", e.getMessage());
+            log.error("从configcenter读取配置失败：{}", e.toString());
             if (cacheFile == null) {
                 throw e;
             }
@@ -67,14 +69,14 @@ public class ConfigRefresher {
                 throw new IllegalStateException(String.format("不存在缓存文件[%s]", cacheFile.getFilePath()));
             }
             config = cacheFile.readAll();
+            version = -1;
             fromServer = false;
         }
         if (fromServer && cacheFile != null) {
             cacheFile.replace(config);
             log.debug("configcenter配置已缓存到：{}", cacheFile.getFilePath());
         }
-        version.set(Long.parseLong(config.get(VERSION_KEY)));
-        config.remove(VERSION_KEY);
+        this.version.set(version);
         properties.replaceProperties(config);
     }
 
@@ -83,13 +85,13 @@ public class ConfigRefresher {
      */
     public synchronized void refresh() {
         Map<String, String> config = configRequester.findConfig();
+        long version = Long.parseLong(config.remove(VERSION_KEY));
         if (cacheFile != null) {
             cacheFile.replace(config);
             log.debug("configcenter配置已缓存到：{}", cacheFile.getFilePath());
         }
-        version.set(Long.parseLong(config.get(VERSION_KEY)));
-        config.remove(VERSION_KEY);
+        this.version.set(version);
         List<ChangedProperty> changedProperties = properties.replaceProperties(config);
-        listenerRegistrar.onChange(changedProperties);
+        listeners.onChange(changedProperties);
     }
 }
